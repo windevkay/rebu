@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/windevkay/rebu/structs"
 )
@@ -23,7 +24,9 @@ func convertStringHelper (value string) float32 {
 * Returns an array of drivers based on requested range
 * The requested range can be incremented to widen a search
 */
-func GetDriversInRange(requestedRange float32) []Driver {
+func GetDriversInRange(requestedRange float32, wg *sync.WaitGroup) []Driver {
+	defer wg.Done()
+	
 	file, err := os.Open("./data.txt")
 	if err != nil {
 		panic("Error reading driver data...terminating 😓")
