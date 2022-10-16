@@ -1,5 +1,6 @@
 package structs
 
+type Control int
 type Driver struct {
 	Id string
 	//the cost represents how far the driver is from the rider

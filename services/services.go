@@ -2,6 +2,7 @@ package services
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/windevkay/rebu/structs"
 )
-
-type Driver structs.Driver
 
 func convertStringHelper (value string) float32 {
 	result, err := strconv.ParseFloat(value, 32)
@@ -24,7 +23,7 @@ func convertStringHelper (value string) float32 {
 * Returns an array of drivers based on requested range
 * The requested range can be incremented to widen a search
 */
-func GetDriversInRange(requestedRange float32, wg *sync.WaitGroup) []Driver {
+func GetDriversInRange(requestedRange float32, wg *sync.WaitGroup, result chan structs.Driver, control chan structs.Control) {
 	defer wg.Done()
 	
 	file, err := os.Open("./data.txt")
@@ -33,26 +32,28 @@ func GetDriversInRange(requestedRange float32, wg *sync.WaitGroup) []Driver {
 	}
 
 	fileReader := bufio.NewReader(file)
-	var drivers []Driver
 
 	for {
 		content, err := fileReader.ReadString('\n')
 		data := strings.Split(content, ",")
 
 		driverDistance := convertStringHelper(data[1])
+		cbu := strings.TrimRight(data[2], "\n")
+
 		if driverDistance <= requestedRange {
-			driver := Driver{
+			driver := structs.Driver{
 				Id: data[0],
 				Cost: driverDistance,
-				CostBeforeUnoccupied: convertStringHelper(data[2]),
+				CostBeforeUnoccupied: convertStringHelper(cbu),
 			}
 	
-			drivers = append(drivers, driver)
+			result <- driver
 		}
 
 		if err == io.EOF {
+			fmt.Println("Done with initial driver data ✅")
+			control <- 0
 			break
 		}
 	}
-	return drivers
 }
